@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Gerador de Mapa de Sala</title>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <style>
+        .card-img-top {
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .titulo {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .mapa {
+            text-align: center;
+        }
+
+        .row-full {
+            width: 100%;
+            text-align: center;
+        }
+
+        .card-title {
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .card-text {
+            font-size: 12px;
+            margin-top: 1;
+            margin-bottom: 0;
+        }
+
+        .reset-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: red;
+            cursor: pointer;
+        }
+
+        .select {
+            margin-bottom: 0px;
+        }
+
+        .jumbotron {
+            padding: 10px 10px 10px 10px;
+            text-align: center;
+        }
+
+        .btn-criar-sala {
+            width: 150px;
+            background-color: black;
+            border-color: black;
+        }
+
+        .form-control {
+            max-width: 80px;
+            text-align: center;
+        }
+
+        .btn-margin-bottom {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <h2 class="titulo">Gerador de Mapa de Sala</h2>
+        <div class="jumbotron">
+            <form id="matrixForm" class="form-inline">
+                <div class="form-group mr-2">
+                    <label for="rows">Número de Linhas: </label>
+                    <input type="number" class="form-control" id="rows" value="5" min="1">
+                </div>
+                <div class="form-group mr-2">
+                    <label for="cols">Número de Colunas: </label>
+                    <input type="number" class="form-control" id="cols" value="6" min="1" max="6">
+                </div>
+                <button type="submit" class="btn btn-primary btn-criar-sala">Atualizar</button>
+            </form>
+        </div>
+
+
+        <div id="matrix" class="mapa"></div>
+
+
+        <button onclick="gerarImagem()" class="btn btn-success btn-margin-bottom">Gerar Imagem</button>
+
+    </div>
+
+    </div>
+
+
+    <script>
+        // Lista de estudantes
+        var students = [
+            { nome: "Selecionar estudante", ra: "0", avatar: "" },
+            { nome: "Alice Freitas", ra: "10149", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/30.png" },
+            { nome: "Ana Luiza da Cunha", ra: "10139", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/20.png" },
+            { nome: "Ana Sophia Azevedo", ra: "10121", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/2.png" },
+            { nome: "Daniel Viana", ra: "10148", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/29.png" },
+            { nome: "Gustavo Cavalcanti", ra: "10122", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/3.png" },
+            { nome: "Henrique Correia", ra: "10136", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/17.png" },
+            { nome: "João Guilherme Pinto", ra: "10123", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png" },
+            { nome: "João Lucas Dias", ra: "10146", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/27.png" },
+            { nome: "Juan Silva", ra: "10141", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/22.png" },
+            { nome: "Lorena Silva", ra: "10137", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/18.png" },
+            { nome: "Lorenzo Silveira", ra: "10126", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png" },
+            { nome: "Luiz Gustavo Lopes", ra: "10133", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/14.png" },
+            { nome: "Luiz Gustavo Nogueira", ra: "10135", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/16.png" },
+            { nome: "Luiza Cunha", ra: "10143", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/24.png" },
+            { nome: "Marcos Vinicius da Rosa", ra: "10131", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/12.png" },
+            { nome: "Marcos Vinicius Ribeiro", ra: "10120", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png" },
+            { nome: "Maria Clara Caldeira", ra: "10127", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/8.png" },
+            { nome: "Maria Pires", ra: "10142", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/23.png" },
+            { nome: "Mariana Rodrigues", ra: "10130", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/11.png" },
+            { nome: "Murilo Moraes", ra: "10132", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/13.png" },
+            { nome: "Noah Mendes", ra: "10129", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10.png" },
+            { nome: "Noah Oliveira", ra: "10145", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/26.png" },
+            { nome: "Rafaela Santos", ra: "10125", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png" },
+            { nome: "Rodrigo Alves", ra: "10134", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/15.png" },
+            { nome: "Sabrina Porto", ra: "10147", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/28.png" },
+            { nome: "Samuel Duarte", ra: "10138", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/19.png" },
+            { nome: "Sophia das Neves", ra: "10124", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/5.png" },
+            { nome: "Sra. Elisa Pereira", ra: "10144", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" },
+            { nome: "Theo Araújo", ra: "10128", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/9.png" },
+            { nome: "Yasmin Porto", ra: "10140", avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/21.png" }
+        ];
+
+        function createMatrix(rows, cols) {
+            var matrix = document.getElementById('matrix');
+            matrix.innerHTML = '';
+
+            // Cria uma matriz vazia para armazenar os estudantes selecionados
+            var selectedStudents = [];
+
+            for (var i = 0; i < rows; i++) {
+                var row = document.createElement('div');
+                row.className = 'row row-full';
+
+                for (var j = 0; j < cols; j++) {
+                    var cell = document.createElement('div');
+                    cell.className = 'col-sm-3 col-md-2 mb-3';
+
+                    var card = document.createElement('div');
+                    card.className = 'card';
+
+                    var cardBody = document.createElement('div');
+                    cardBody.className = 'card-body';
+
+                    // Número da Mesa
+                    var index = document.createElement('h5');
+                    index.className = 'card-title';
+                    index.textContent = "Mesa: " + (i * cols + j + 1).toString();
+
+                    //Select de Estudante
+                    var select = document.createElement('select');
+                    select.className = 'custom-select ignore-capture';
+                    select.setAttribute('data-mesa', i * cols + j);
+
+                    for (var k = 0; k < students.length; k++) {
+                        var option = document.createElement('option');
+                        option.value = k;
+                        option.textContent = students[k].nome;
+                        select.appendChild(option);
+                    }
+
+                    // RA Estudante
+                    var text1 = document.createElement('p');
+                    text1.className = 'card-text';
+                    text1.textContent = '';
+
+                    // Nome Estudante
+                    var text2 = document.createElement('p');
+                    text2.className = 'card-text';
+                    text2.textContent = '';
+
+                    // Avatar
+                    var dummyImage = document.createElement('img');
+                    dummyImage.className = 'card-img-top ignore-capture';
+                    dummyImage.id = 'foto-estudante';
+                    dummyImage.src = 'https://img.freepik.com/vetores-premium/icone-de-circulo-de-usuario-anonimo-estilo-simples-de-ilustracao-vetorial-com-sombra-longa_520826-1931.jpg?w=740';
+
+                    // Botão RESET
+                    var resetButton = document.createElement('i');
+                    resetButton.className = 'fas fa-times reset-button ignore-capture';
+                    resetButton.setAttribute('data-mesa', i * cols + j);
+
+                    resetButton.addEventListener('click', function (event) {
+                        var mesa = this.getAttribute('data-mesa');
+                        var selectedStudent = selectedStudents[mesa];
+
+                        // Habilita a opção do estudante previamente selecionado
+                        if (selectedStudent) {
+                            var selectedIndex = selectedStudent.select.value;
+                            selectedStudent.select.options[selectedIndex].disabled = false;
+                        }
+
+                        // Limpa as informações do estudante no card
+                        selectedStudent.select.value = '';
+                        selectedStudent.card.querySelector('.card-text').textContent = '';
+                        selectedStudent.card.querySelector('.card-text + .card-text').textContent = '';
+                        selectedStudent.card.querySelector('.card-img-top').src = 'https://img.freepik.com/vetores-premium/icone-de-circulo-de-usuario-anonimo-estilo-simples-de-ilustracao-vetorial-com-sombra-longa_520826-1931.jpg?w=740';
+
+                        // Remove o estudante da lista de estudantes selecionados
+                        selectedStudents[mesa] = null;
+                    });
+
+                    cardBody.appendChild(index);
+                    cardBody.appendChild(select);
+                    cardBody.appendChild(text1);
+                    cardBody.appendChild(text2);
+                    cardBody.appendChild(resetButton);
+                    card.appendChild(dummyImage);
+                    card.appendChild(cardBody);
+                    cell.appendChild(card);
+                    row.appendChild(cell);
+                }
+
+                matrix.appendChild(row);
+            }
+
+            // Adicionar evento de alteração do select
+            var selects = document.getElementsByClassName('custom-select');
+            for (var i = 0; i < selects.length; i++) {
+                selects[i].addEventListener('change', function (event) {
+                    var mesa = this.getAttribute('data-mesa');
+                    var selectedIndex = this.value;
+                    var estudante = students[selectedIndex];
+
+                    // Verifica se o estudante já foi selecionado em outra mesa
+                    var isAlreadySelected = selectedStudents.some(function (selected) {
+                        return selected && selected.estudante === estudante;
+                    });
+
+                    // Se o estudante já foi selecionado em outra mesa, exibe um alerta
+                    if (isAlreadySelected) {
+                        alert('O estudante já foi selecionado em outra mesa. Por favor, escolha outro estudante.');
+                        this.value = '';
+                        return;
+                    }
+
+                    // Remove o estudante previamente selecionado da lista de estudantes disponíveis
+                    if (selectedStudents[mesa]) {
+                        var previousStudentIndex = selectedStudents[mesa].select.value;
+                        var previousStudentOption = selectedStudents[mesa].select.options[previousStudentIndex];
+                        previousStudentOption.disabled = false;
+                    }
+
+                    // Atualiza a imagem com o avatar correspondente ao estudante selecionado
+                    var card = this.closest('.card');
+                    var image = card.querySelector('.card-img-top');
+                    image.src = estudante.avatar;
+
+                    var text1 = card.querySelector('.card-text');
+                    var text2 = card.querySelectorAll('.card-text')[1];
+
+                    text1.textContent = estudante.ra;
+                    text2.textContent = estudante.nome;
+
+                    // Armazena o estudante selecionado na matriz de estudantes selecionados
+                    selectedStudents[mesa] = {
+                        estudante: estudante,
+                        select: this,
+                        card: card
+                    }
+
+                    console.log(selectedStudents);
+
+
+
+                    // Desabilita a opção selecionada para evitar repetição em outras mesas
+                    this.options[selectedIndex].disabled = true;
+                });
+            }
+        }
+
+        document.getElementById('matrixForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            var rows = parseInt(document.getElementById('rows').value);
+            var cols = parseInt(document.getElementById('cols').value);
+            createMatrix(rows, cols);
+        });
+
+        function gerarImagem() {
+            const divElement = document.getElementById('matrix');
+
+            // Ocultar elementos a serem ignorados durante a captura
+            const elementsToHide = divElement.getElementsByClassName('ignore-capture');
+            for (var i = 0; i < elementsToHide.length; i++) {
+                elementsToHide[i].style.display = 'none';
+            }
+
+            html2canvas(divElement).then(function (canvas) {
+                // Restaurar a exibição dos elementos ignorados
+                for (var i = 0; i < elementsToHide.length; i++) {
+                    elementsToHide[i].style.display = '';
+                }
+
+                var img = document.createElement('img');
+                img.src = canvas.toDataURL();
+                img.style.display = 'block';
+                img.style.marginLeft = '80px';
+                img.style.marginRight = '80px';
+                img.style.marginTop = '20px';
+                document.body.appendChild(img);
+
+                var h1 = document.createElement('h1');
+                h1.textContent = 'Mapa de Sala Gerado';
+                h1.style.textAlign = 'center';
+                h1.style.marginTop = '20px';
+                document.body.insertBefore(h1, img);
+
+                var link = document.createElement('a');
+                link.href = canvas.toDataURL();
+                link.download = 'imagem_gerada.png';
+                link.classList.add('btn', 'btn-primary');
+                link.style.display = 'block';
+                link.style.margin = 'auto';
+                link.style.backgroundColor = '#000';
+                link.style.color = '#fff';
+                link.style.textAlign = 'center';
+                link.style.padding = '10px';
+                link.style.width = '200px';
+                link.style.marginTop = '20px';
+                link.textContent = 'Download da Imagem';
+                link.style.marginBottom = '40px';
+                document.body.appendChild(link);
+            });
+        }
+
+
+
+        // Criar a matriz inicialmente
+        createMatrix(4, 6);
+
+    </script>
+</body>
+
+</html>
